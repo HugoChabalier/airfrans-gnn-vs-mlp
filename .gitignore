@@ -1,0 +1,12 @@
+# Environment and data (several GB on the cluster - never commit)
+miniforge3/
+data/
+__pycache__/
+*.pyc
+
+# PBS job logs
+*.o[0-9]*
+*.e[0-9]*
+
+# Trained model checkpoints (remove this line to publish them)
+results/*.pt

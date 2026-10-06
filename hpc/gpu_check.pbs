@@ -1,0 +1,25 @@
+#!/bin/bash
+# Quick GPU sanity check (~1 min):  qsub hpc/gpu_check.pbs
+#PBS -N gpu_check
+#PBS -l select=1:ncpus=2:mem=8gb:ngpus=1
+#PBS -l walltime=00:10:00
+#PBS -j oe
+#PBS -q gpu_V100
+#PBS -M YOUR_EMAIL@cranfield.ac.uk
+#PBS -m ae
+
+BASE=/mnt/beegfs/home/$USER/cnn
+source "$BASE/miniforge3/etc/profile.d/conda.sh"
+conda activate airfrans
+
+hostname
+env | grep -iE "cuda|nvidia" | sort
+nvidia-smi --query-gpu=name,driver_version,compute_mode,memory.used --format=csv
+python - <<'EOF'
+import torch
+print("torch", torch.__version__, "| built for CUDA", torch.version.cuda,
+      "| arch list", torch.cuda.get_arch_list())
+print("cuda available:", torch.cuda.is_available(), "| devices:", torch.cuda.device_count())
+x = torch.randn(2000, 2000, device="cuda")
+print("matmul on", torch.cuda.get_device_name(0), "OK:", float((x @ x).sum()) == float((x @ x).sum()))
+EOF

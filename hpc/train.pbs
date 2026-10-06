@@ -1,0 +1,26 @@
+#!/bin/bash
+# Train MLP + GNN and compare, on a GPU node:  qsub -v TASK=scarce hpc/train.pbs
+#PBS -N airfrans_train
+#PBS -l select=1:ncpus=8:mem=32gb:ngpus=1
+#PBS -l walltime=12:00:00
+#PBS -j oe
+## GPU queues on Crescent2: gpu_V100, gpu_T4 (check limits: qstat -Qf gpu_V100 | grep -i walltime)
+#PBS -q gpu_V100
+#PBS -M YOUR_EMAIL@cranfield.ac.uk
+#PBS -m abe            # PBS on Crescent2 requires -M: set your own email above
+
+TASK=${TASK:-scarce}   # scarce | full | reynolds | aoa
+BASE=/mnt/beegfs/home/$USER/cnn
+export AIRFRANS_DATA=$BASE/data
+source "$BASE/miniforge3/etc/profile.d/conda.sh"
+conda activate airfrans
+cd "$PBS_O_WORKDIR"
+
+nvidia-smi
+echo "CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES"
+python -c "import torch; torch.zeros(1).cuda(); print(\"CUDA OK:\", torch.cuda.get_device_name(0))" || exit 1
+# MLP and comparison are CPU-only: hide the GPU so PyTorch never touches it.
+CUDA_VISIBLE_DEVICES= python train_mlp.py --task "$TASK"
+python train_gnn.py --task "$TASK" --epochs 100 --n-nodes 16000 --k 12 --hidden 128 --layers 6 \
+    --batch-size 4 --workers 6
+CUDA_VISIBLE_DEVICES= python compare.py --task "$TASK"

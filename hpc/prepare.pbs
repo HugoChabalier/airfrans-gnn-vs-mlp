@@ -1,0 +1,17 @@
+#!/bin/bash
+# Preprocess AirfRANS on a CPU compute node:  qsub hpc/prepare.pbs
+#PBS -N airfrans_prep
+#PBS -l select=1:ncpus=4:mem=32gb
+#PBS -l walltime=04:00:00
+#PBS -j oe
+#PBS -q six_hour
+#PBS -M YOUR_EMAIL@cranfield.ac.uk
+#PBS -m abe            # PBS on Crescent2 requires -M: set your own email above
+
+BASE=/mnt/beegfs/home/$USER/cnn
+export AIRFRANS_DATA=$BASE/data
+source "$BASE/miniforge3/etc/profile.d/conda.sh"
+conda activate airfrans
+cd "$PBS_O_WORKDIR"
+
+python prepare_data.py --delete-raw

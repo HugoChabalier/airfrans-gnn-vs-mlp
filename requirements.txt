@@ -1,0 +1,8 @@
+# CPU build of PyTorch:  pip install torch --index-url https://download.pytorch.org/whl/cpu
+torch>=2.4
+torch_geometric>=2.5
+numpy
+scipy
+pandas
+matplotlib
+tqdm
